@@ -1,14 +1,12 @@
 "use client";
 
 import React from "react"
-
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import { Eye, EyeOff, FileText } from "lucide-react";
 
 export default function SignUpPage() {
@@ -20,7 +18,6 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,24 +36,7 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-            `${window.location.origin}/dashboard`,
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (error) {
-        setError(error.message);
-        return;
-      }
-
+      // Mock signup - just redirect to success
       router.push("/auth/sign-up-success");
     } catch {
       setError("An unexpected error occurred");

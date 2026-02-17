@@ -74,7 +74,10 @@ export function UploadSection() {
             })
 
             if (response.ok) {
-                router.push("/dashboard")
+                const data = await response.json()
+                sessionStorage.setItem("resumeAnalysis", JSON.stringify(data.analysis))
+                sessionStorage.setItem("resumeFileName", file.name)
+                router.push("/analysis/result")
             }
         } catch (error) {
             console.error("Analysis failed", error)

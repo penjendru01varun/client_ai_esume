@@ -1,5 +1,4 @@
 import { google } from "@ai-sdk/google";
-import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { generateText } from "ai";
 
@@ -113,51 +112,7 @@ Provide realistic scores based on common ATS best practices.`;
       };
     }
 
-    // Try to save for authenticated users
-    try {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user) {
-        // Save resume record
-        const { data: resume } = await supabase
-          .from("resumes")
-          .insert({
-            user_id: user.id,
-            file_name: fileName,
-            file_url: null,
-            job_description: jobDescription || null,
-          })
-          .select()
-          .single();
-
-        if (resume) {
-          // Save the analysis
-          await supabase
-            .from("ats_scores")
-            .insert({
-              resume_id: resume.id,
-              user_id: user.id,
-              overall_score: analysis.overall_score,
-              keyword_score: analysis.keyword_score,
-              formatting_score: analysis.formatting_score,
-              experience_score: analysis.experience_score,
-              skills_score: analysis.skills_score,
-              feedback: {
-                summary: analysis.summary,
-                strengths: analysis.strengths,
-                improvements: analysis.improvements,
-                missing_keywords: analysis.missing_keywords,
-                recommendations: analysis.recommendations,
-              },
-            });
-        }
-      }
-    } catch {
-      // Continue without saving for guest users
-    }
-
-    // Return analysis for all users (saved or not)
+    // Return analysis for all users
     return NextResponse.json({
       analysis: {
         overall_score: analysis.overall_score,

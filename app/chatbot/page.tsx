@@ -1,13 +1,12 @@
 "use client";
 
 import React from "react"
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useChat } from "@ai-sdk/react";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 import { Send, Bot, User, Sparkles, FileText, MessageSquare, Trash2 } from "lucide-react";
 
 const suggestedPrompts = [
@@ -18,33 +17,14 @@ const suggestedPrompts = [
 ];
 
 export default function ChatbotPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading, append } = useChat({
     api: "/api/chat",
   });
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/auth/login?redirect=/chatbot");
-        return;
-      }
-
-      setIsAuthenticated(true);
-      setCheckingAuth(false);
-    };
-
-    checkAuth();
-  }, [router, supabase]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

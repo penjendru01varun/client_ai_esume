@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import {
   User,
   Briefcase,
@@ -88,49 +87,13 @@ export default function ResumeBuilderPage() {
   const [newSkill, setNewSkill] = useState("");
   const [newCertification, setNewCertification] = useState("");
   const router = useRouter();
-  const supabase = React.useMemo(() => createClient(), []);
-
-  useEffect(() => {
-    const loadSavedData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/auth/login?redirect=/resume-builder");
-        return;
-      }
-
-      const { data: savedData } = await supabase
-        .from("resume_builder_data")
-        .select("data")
-        .eq("user_id", user.id)
-        .single();
-
-      if (savedData?.data) {
-        setData(savedData.data as ResumeData);
-      }
-    };
-
-    loadSavedData();
-  }, [router, supabase]);
 
   const saveData = async () => {
     setSaving(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      await supabase.from("resume_builder_data").upsert(
-        {
-          user_id: user.id,
-          data,
-        },
-        { onConflict: "user_id" }
-      );
-    }
-    setSaving(false);
+    // Mock save
+    setTimeout(() => {
+      setSaving(false);
+    }, 500);
   };
 
   const updatePersonalInfo = (field: keyof PersonalInfo, value: string) => {
@@ -800,77 +763,69 @@ export default function ResumeBuilderPage() {
       <Header />
       <main className="flex-1 py-8 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Resume Builder
-            </h1>
-            <p className="text-muted-foreground">
-              Create a professional resume in minutes
-            </p>
-          </div>
-
           {/* Progress Steps */}
-          <div className="flex items-center justify-center mb-10 overflow-x-auto pb-4">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <button
-                  onClick={() => setCurrentStep(step.id)}
-                  className={`flex flex-col items-center gap-2 px-4 ${currentStep === step.id
-                    ? "text-coral"
-                    : currentStep > step.id
-                      ? "text-green-500"
-                      : "text-muted-foreground"
-                    }`}
-                >
+          <div className="mb-12">
+            <div className="flex items-center justify-between relative">
+              <div className="absolute top-1/2 left-0 w-full h-1 bg-muted -translate-y-1/2 z-0" />
+              <div
+                className="absolute top-1/2 left-0 h-1 bg-coral -translate-y-1/2 z-0 transition-all duration-300"
+                style={{
+                  width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
+                }}
+              />
+              {steps.map((step) => {
+                const StepIcon = step.icon;
+                const isActive = step.id <= currentStep;
+                return (
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep === step.id
-                      ? "bg-coral text-white"
-                      : currentStep > step.id
-                        ? "bg-green-500 text-white"
-                        : "bg-muted"
-                      }`}
+                    key={step.id}
+                    className="relative z-10 flex flex-col items-center"
                   >
-                    <step.icon className="w-5 h-5" />
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300 ${isActive
+                          ? "bg-coral text-white"
+                          : "bg-muted text-muted-foreground"
+                        }`}
+                    >
+                      <StepIcon className="w-6 h-6" />
+                    </div>
+                    <span
+                      className={`absolute -bottom-7 text-xs font-medium whitespace-nowrap transition-colors duration-300 ${isActive ? "text-coral" : "text-muted-foreground"
+                        }`}
+                    >
+                      {step.name}
+                    </span>
                   </div>
-                  <span className="text-xs font-medium whitespace-nowrap">
-                    {step.name}
-                  </span>
-                </button>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-12 h-0.5 mx-2 ${currentStep > step.id ? "bg-green-500" : "bg-muted"
-                      }`}
-                  />
-                )}
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
 
           {/* Step Content */}
-          <div className="bg-card rounded-2xl shadow-lg p-6 md:p-8">
+          <div className="bg-card border border-border shadow-sm rounded-3xl p-8 mb-8">
             {renderStep()}
+          </div>
 
-            {/* Navigation */}
-            <div className="flex justify-between mt-8 pt-6 border-t border-border">
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between">
+            <Button
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              variant="outline"
+              className="rounded-full px-6 border-border hover:bg-muted/50 bg-transparent text-foreground"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" /> Previous
+            </Button>
+            {currentStep < 5 ? (
               <Button
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                variant="outline"
-                className="rounded-full px-6 bg-transparent"
+                onClick={nextStep}
+                className="rounded-full px-8 bg-coral hover:bg-coral-dark text-white"
               >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Previous
+                Next <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
-              {currentStep < 5 && (
-                <Button
-                  onClick={nextStep}
-                  className="bg-coral hover:bg-coral-dark text-white rounded-full px-6"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
-              )}
-            </div>
+            ) : (
+              <div />
+            )}
           </div>
         </div>
       </main>

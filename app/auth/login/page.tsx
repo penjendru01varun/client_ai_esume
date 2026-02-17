@@ -1,14 +1,12 @@
 "use client";
 
 import React from "react"
-
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
 import { Eye, EyeOff, FileText } from "lucide-react";
 
 export default function LoginPage() {
@@ -20,7 +18,6 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
-  const supabase = useMemo(() => createClient(), []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,16 +25,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-        return;
-      }
-
+      // Mock login - just redirect to dashboard
       router.push(redirectTo);
       router.refresh();
     } catch {

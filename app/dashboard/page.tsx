@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ScoreCircle } from "@/components/score-circle";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 import {
   Upload,
   FileText,
@@ -30,59 +29,22 @@ interface Resume {
 
 export default function DashboardPage() {
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userName, setUserName] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState<string>("User");
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/auth/login");
-        return;
-      }
-
-      setUserName(user.user_metadata?.full_name || user.email || "User");
-
-      const { data: resumeData } = await supabase
-        .from("resumes")
-        .select(
-          `
-          id,
-          file_name,
-          created_at,
-          job_description,
-          ats_scores (
-            id,
-            overall_score
-          )
-        `
-        )
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      setResumes(resumeData || []);
+    // Mock data fetching
+    const fetchMockData = () => {
       setLoading(false);
     };
 
-    fetchData();
-  }, [router, supabase]);
+    fetchMockData();
+  }, [router]);
 
-  const handleDelete = async (resumeId: string) => {
+  const handleDelete = (resumeId: string) => {
     if (!confirm("Are you sure you want to delete this resume?")) return;
-
-    const { error } = await supabase
-      .from("resumes")
-      .delete()
-      .eq("id", resumeId);
-
-    if (!error) {
-      setResumes(resumes.filter((r) => r.id !== resumeId));
-    }
+    setResumes(resumes.filter((r) => r.id !== resumeId));
   };
 
   const formatDate = (dateString: string) => {
